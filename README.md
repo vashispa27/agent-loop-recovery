@@ -154,6 +154,16 @@ false-intervention labels. Run the tuning split with:
 uv run python -m agent_loop_recovery.evaluation --split tuning --output artifacts/tuning.json
 ```
 
+The [expanded matrix](docs/experiment-005.md) publishes all 24 runs across eight
+cases, including the frozen held-out split, with [full traces](docs/results/expanded-fixtures.json).
+Recovery and the hard-limit baseline each complete 3 of 8 cases, using 29 and 42
+total business requests respectively. Recovery fixes the obsolete label but
+falsely intervenes on a longer carrier delay that the baseline completes.
+
+```bash
+uv run python -m agent_loop_recovery.evaluation --split all --output artifacts/expanded.json
+```
+
 For this known failure, refreshing the order immediately after a not-found result
 is a credible simpler alternative. The detector is not proven better. Conversely,
 not-found can also mean carrier propagation delay; the included two-failure control
