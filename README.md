@@ -146,6 +146,14 @@ sidecar, Redis queue, hard cancellation, or durable cross-process checkpoint sto
 See [the first experiment](docs/experiment-001.md) for observed outcomes,
 reproduction steps, and limitations.
 
+The [split-fixture evaluation](docs/experiment-004.md) adds a frozen tuning/held-out
+manifest and a runner with per-case traces, request accounting, and explicit
+false-intervention labels. Run the tuning split with:
+
+```bash
+uv run python -m agent_loop_recovery.evaluation --split tuning --output artifacts/tuning.json
+```
+
 For this known failure, refreshing the order immediately after a not-found result
 is a credible simpler alternative. The detector is not proven better. Conversely,
 not-found can also mean carrier propagation delay; the included two-failure control

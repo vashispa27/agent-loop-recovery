@@ -222,12 +222,15 @@ def run_experiment(
     max_attempts: int = 8,
     threshold: int = 3,
     policy: AgentPolicy | None = None,
+    *,
+    initial_tracking: str | None = None,
 ) -> dict:
     policy = policy or ScriptedPolicy()
     graph = build_agent(client, mode, max_attempts, threshold, policy)
     initial: AgentState = {
         "order_id": ORDER_ID,
-        "tracking_id": NEW_TRACKING if scenario in ("healthy", "carrier-delay") else OLD_TRACKING,
+        "tracking_id": initial_tracking
+        or (NEW_TRACKING if scenario in ("healthy", "carrier-delay") else OLD_TRACKING),
         "selected_reference": "",
         "planned_action": "track",
         "attempts": 0,

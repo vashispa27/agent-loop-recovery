@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import threading
 from contextlib import contextmanager
+from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote, urlparse
 
@@ -20,11 +21,32 @@ def canonical_reference(value: str) -> str:
     return value.replace("-", "").strip().upper()
 
 
+@dataclass(frozen=True)
+class FixtureConfig:
+    """Independent synthetic conditions; delay counts requests, not wall-clock time."""
+
+    delay_requests: int = 0
+    order_tracking: str = NEW_TRACKING
+    order_id: str = ORDER_ID
+    order_unavailable: bool = False
+    carrier_unavailable: bool = False
+    shipment_exists: bool = True
+
+    def __post_init__(self):
+        if self.delay_requests < 0:
+            raise ValueError("delay_requests must be nonnegative")
+
+
 @contextmanager
-def fixture_services(scenario: str):
+def fixture_services(scenario: str, *, config: FixtureConfig | None = None):
     """Bind an ephemeral port; keep fixture state isolated for every experiment."""
     if scenario not in SCENARIOS:
         raise ValueError(f"Unknown scenario: {scenario}")
+    config = config or FixtureConfig(
+        delay_requests=2 if scenario == "carrier-delay" else 0,
+        order_tracking=OLD_TRACKING if scenario == "unrecoverable" else NEW_TRACKING,
+        order_unavailable=scenario == "order-outage",
+    )
     carrier_requests = 0
 
     class Handler(BaseHTTPRequestHandler):
@@ -37,17 +59,21 @@ def fixture_services(scenario: str):
             status = 404
             body = {"error": "resource_not_found"}
             if path == f"/orders/{ORDER_ID}":
-                if scenario == "order-outage":
+                if config.order_unavailable:
                     status, body = 503, {"error": "order_service_unavailable"}
                 else:
-                    current = OLD_TRACKING if scenario == "unrecoverable" else NEW_TRACKING
-                    status, body = 200, {"order_id": ORDER_ID, "tracking_id": current}
+                    status, body = (
+                        200,
+                        {"order_id": config.order_id, "tracking_id": config.order_tracking},
+                    )
             elif path.startswith("/carrier/shipments/"):
                 carrier_requests += 1
                 reference = path.rsplit("/", 1)[-1]
                 valid = canonical_reference(reference) == canonical_reference(NEW_TRACKING)
-                pending = scenario == "carrier-delay" and carrier_requests <= 2
-                if valid and not pending:
+                pending = carrier_requests <= config.delay_requests
+                if config.carrier_unavailable:
+                    status, body = 503, {"error": "service_unavailable"}
+                elif valid and not pending and config.shipment_exists:
                     status, body = (
                         200,
                         {
