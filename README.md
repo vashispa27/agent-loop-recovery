@@ -108,6 +108,35 @@ A policy that chooses `refresh_order` after the first failure can self-correct
 without triggering the detector: the integration tests verify this in all three
 modes. Policy decisions and tool outcomes are recorded separately in the trace.
 
+## Optional model-backed policy
+
+The default remains deterministic. To try a real policy decision with an existing
+ChatGPT-authenticated [Codex CLI](https://learn.chatgpt.com/docs/noninteractive),
+install the CLI separately, sign in with `codex login`, and opt in:
+
+```bash
+uv run loop-recovery --policy codex --mode baseline --scenario stale-label \
+  --model gpt-6.1-sol --policy-max-calls 4 --policy-timeout 60 \
+  --output artifacts/model-policy.json
+```
+
+Model availability depends on the CLI and account. The initial smoke attempt for
+the model above was rejected by the provider; see [experiment 003](docs/experiment-003.md).
+There is no automatic fallback to another model or API-key billing. The adapter
+requires ChatGPT sign-in, excludes provider-key environment variables, ignores
+custom execution configuration, and uses a read-only temporary working directory.
+Shell, browser, app, plugin, and agent-delegation tools are disabled for inference.
+The model returns only a schema-constrained decision; the graph owns business tools.
+
+Each decision has a subprocess timeout and the policy has a separate call budget.
+Timeouts terminate the CLI process group on POSIX. Missing CLI, incompatible login,
+unavailable models, malformed output, and exhausted limits escalate. Model prompts,
+validated decisions, observed CLI usage counters, and durations appear in
+`policy_calls`. Raw CLI diagnostics and credentials are not copied into traces.
+Prompts contain the synthetic business observations used in this demonstration.
+The `compare` mode starts a fresh policy for each of its three runs; use a single
+mode when bounding live inference. Usage consumes the signed-in account's allowance.
+
 This version runs detection inline at a graph boundary. There is no independent
 sidecar, Redis queue, hard cancellation, or durable cross-process checkpoint store.
 `InMemorySaver` supports pause/resume within the demo process only.
@@ -124,8 +153,9 @@ recovers naturally without intervention. Longer delays can still trigger a false
 stall verdict. A production integration should use error semantics, backoff, time
 budgets, and domain-specific routing before adding an LLM judge.
 
-The fixtures are local and seeded; there is no live carrier integration, real LLM
-run, accuracy benchmark, token-cost measurement, or production reliability claim.
+The fixtures are local and seeded. The published model smoke attempt failed before
+producing a decision; there is no completed live-model benchmark, live carrier
+integration, monetary-cost measurement, or production reliability claim.
 
 Inspired by [Tusharaws/agent-circuit-breaker](https://github.com/Tusharaws/agent-circuit-breaker).
 This is an independent implementation focused on recovery and baseline comparison;

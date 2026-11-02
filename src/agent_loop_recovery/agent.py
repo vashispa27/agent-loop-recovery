@@ -260,4 +260,5 @@ def run_experiment(
         "elapsed_ms": round((time.perf_counter() - started) * 1000, 2),
         "answer": state["answer"],
         "events": state["events"],
+        "policy_calls": list(getattr(policy, "calls", [])),
     }
