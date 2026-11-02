@@ -96,10 +96,17 @@ the order service and updates graph state only if it receives a new tracking
 reference for the same order. At most one recovery is allowed. A subsequent stall
 or unsuccessful refresh escalates rather than repeatedly attempting recovery.
 
-The baseline agent's policy is deliberately narrow: it can look up a shipment
-using its cached identifier but cannot refresh order data itself. The controller
-owns that additional read. This models a legacy tool scope, not a general agent
-with every tool available. The policy is injectable for the future model experiment.
+Policies implement `decide(PolicyContext) -> PolicyDecision` and can choose to
+track a shipment, refresh the order, or escalate. The context contains typed tool
+observations and remaining request/recovery budgets. The graph validates decisions,
+rejects invented tracking references, and enforces at most one order refresh in
+every mode. Only a successful carrier response can produce a completed answer.
+
+The default `ScriptedPolicy` deliberately ignores failed observations and keeps
+changing the cached identifier's formatting. It reproduces the original experiment.
+A policy that chooses `refresh_order` after the first failure can self-correct
+without triggering the detector: the integration tests verify this in all three
+modes. Policy decisions and tool outcomes are recorded separately in the trace.
 
 This version runs detection inline at a graph boundary. There is no independent
 sidecar, Redis queue, hard cancellation, or durable cross-process checkpoint store.

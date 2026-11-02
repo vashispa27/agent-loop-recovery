@@ -11,6 +11,13 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Command, interrupt
 
 from agent_loop_recovery.detector import NoProgressDetector
+from agent_loop_recovery.policy import (
+    AgentPolicy,
+    PolicyDecision,
+    PolicyError,
+    ScriptedPolicy,
+    policy_context,
+)
 from agent_loop_recovery.services import (
     NEW_TRACKING,
     OLD_TRACKING,
@@ -26,6 +33,7 @@ class AgentState(TypedDict):
     order_id: str
     tracking_id: str
     selected_reference: str
+    planned_action: str
     attempts: int
     recoveries: int
     epoch: int
@@ -35,23 +43,12 @@ class AgentState(TypedDict):
     events: Annotated[list[dict], operator.add]
 
 
-class ScriptedPolicy:
-    """Fault injection: keep changing ID formatting despite failed observations."""
-
-    name = "scripted-faulty-policy"
-
-    def choose_reference(self, state: AgentState) -> str:
-        reference = state["tracking_id"]
-        variants = (reference, reference.lower(), reference.replace("-", ""))
-        return variants[state["attempts"] % len(variants)]
-
-
 def build_agent(
     client: ServiceClient,
     mode: Mode,
     max_attempts: int = 8,
     threshold: int = 3,
-    policy=None,
+    policy: AgentPolicy | None = None,
 ):
     if mode not in ("baseline", "halt", "recover"):
         raise ValueError(f"Unknown mode: {mode}")
@@ -72,8 +69,36 @@ def build_agent(
     def plan(state):
         if state["attempts"] >= max_attempts:
             return {"status": "budget_exhausted", "answer": "Attempt limit reached; escalate."}
-        reference = policy.choose_reference(state)
-        return {"selected_reference": reference}
+        try:
+            choice = policy.decide(policy_context(state, max_attempts))
+            if not isinstance(choice, PolicyDecision):
+                raise PolicyError("Policy must return a PolicyDecision")
+            if choice.action == "track" and canonical_reference(
+                choice.tracking_id
+            ) != canonical_reference(state["tracking_id"]):
+                raise PolicyError("Tracking reference must come from the current order state")
+        except PolicyError:
+            return {
+                "status": "escalated",
+                "answer": "Policy could not provide a valid decision; escalate to support.",
+                "events": [event(state, "policy_error", reason="invalid_or_unavailable_policy")],
+            }
+        updates = {
+            "planned_action": choice.action,
+            "selected_reference": choice.tracking_id or "",
+            "events": [
+                event(
+                    state,
+                    "policy_decision",
+                    action=choice.action,
+                    tracking_id=choice.tracking_id,
+                    reason=choice.reason,
+                )
+            ],
+        }
+        if choice.action == "escalate":
+            updates.update(status="escalated", answer=f"Escalated to support: {choice.reason}")
+        return updates
 
     def track(state):
         reference = state["selected_reference"]
@@ -131,6 +156,8 @@ def build_agent(
         return {"events": [event(state, "recovery_authorized", action="refresh_order")]}
 
     def recover(state):
+        if state["recoveries"] >= 1:
+            return {"status": "escalated", "answer": "Recovery exhausted; escalate to support."}
         # Only a read from the trusted order system is allowed; the policy cannot invent an ID.
         result = client.order(state["order_id"])
         updates = {
@@ -168,7 +195,14 @@ def build_agent(
     graph.add_node("gate", gate)
     graph.add_node("recover", recover)
     graph.add_edge(START, "plan")
-    graph.add_conditional_edges("plan", lambda s: END if s["status"] != "running" else "track")
+    graph.add_conditional_edges(
+        "plan",
+        lambda s: (
+            END
+            if s["status"] != "running"
+            else ("recover" if s["planned_action"] == "refresh_order" else "track")
+        ),
+    )
     graph.add_conditional_edges("track", lambda s: END if s["status"] != "running" else "monitor")
     graph.add_conditional_edges(
         "monitor",
@@ -187,7 +221,7 @@ def run_experiment(
     scenario: str,
     max_attempts: int = 8,
     threshold: int = 3,
-    policy=None,
+    policy: AgentPolicy | None = None,
 ) -> dict:
     policy = policy or ScriptedPolicy()
     graph = build_agent(client, mode, max_attempts, threshold, policy)
@@ -195,6 +229,7 @@ def run_experiment(
         "order_id": ORDER_ID,
         "tracking_id": NEW_TRACKING if scenario in ("healthy", "carrier-delay") else OLD_TRACKING,
         "selected_reference": "",
+        "planned_action": "track",
         "attempts": 0,
         "recoveries": 0,
         "epoch": 0,
