@@ -191,3 +191,12 @@ Immediate refresh repairs the obsolete label with 2 carrier calls plus 1 order
 read, but escalates prematurely on propagation delay. Backoff preserves delayed
 success and cannot repair a stale reference. The short waits demonstrate retry
 mechanics; the fixtures advance delay by request count rather than wall time.
+
+[Timeout and budget checks](docs/experiment-007.md) cover carrier/order timeouts,
+recovery exhaustion, and success on the final permitted request. When the carrier
+budget ends at the detector threshold, the workflow terminates without pausing or
+issuing an unusable refresh. Reproduce the injected transport checks with:
+
+```bash
+uv run python -m agent_loop_recovery.failure_checks --output artifacts/failure-checks.json
+```

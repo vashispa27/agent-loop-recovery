@@ -1,0 +1,792 @@
+{
+  "method": "scripted policy with injected HTTP transport",
+  "rows": [
+    {
+      "fault": "carrier-timeout",
+      "budget": 8,
+      "requests": [
+        "/carrier/shipments/TRK-OLD-1042"
+      ],
+      "trace": {
+        "mode": "recover",
+        "scenario": "stale-label",
+        "policy": "scripted-faulty-policy",
+        "status": "escalated",
+        "carrier_calls": 1,
+        "recovery_attempts": 0,
+        "interrupted": false,
+        "resumed": false,
+        "elapsed_ms": 1.79,
+        "answer": "Carrier unavailable; escalate to support.",
+        "events": [
+          {
+            "id": 1,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "TRK-OLD-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 2,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRK-OLD-1042"
+            },
+            "result": {
+              "http_status": 503,
+              "error": "service_timeout"
+            }
+          }
+        ],
+        "policy_calls": []
+      }
+    },
+    {
+      "fault": "order-timeout",
+      "budget": 8,
+      "requests": [
+        "/carrier/shipments/TRK-OLD-1042",
+        "/carrier/shipments/trk-old-1042",
+        "/carrier/shipments/TRKOLD1042",
+        "/orders/ORD-1042"
+      ],
+      "trace": {
+        "mode": "recover",
+        "scenario": "stale-label",
+        "policy": "scripted-faulty-policy",
+        "status": "escalated",
+        "carrier_calls": 3,
+        "recovery_attempts": 1,
+        "interrupted": true,
+        "resumed": true,
+        "elapsed_ms": 3.57,
+        "answer": "Order refresh failed or provided no new shipment reference; escalate.",
+        "events": [
+          {
+            "id": 1,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "TRK-OLD-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 2,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRK-OLD-1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 3,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "trk-old-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 4,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "trk-old-1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 5,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "TRKOLD1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 6,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRKOLD1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 7,
+            "kind": "loop_detected",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "is_stalled": true,
+            "reason": "Repeated shipment lookup failures for the same order without progress",
+            "evidence_ids": [
+              2,
+              4,
+              6
+            ]
+          },
+          {
+            "id": 8,
+            "kind": "recovery_authorized",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "refresh_order"
+          },
+          {
+            "id": 9,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "refresh_order",
+            "args": {
+              "order_id": "ORD-1042"
+            },
+            "result": {
+              "http_status": 503,
+              "error": "service_timeout"
+            }
+          }
+        ],
+        "policy_calls": []
+      }
+    },
+    {
+      "fault": "persistent-not-found",
+      "budget": 8,
+      "requests": [
+        "/carrier/shipments/TRK-OLD-1042",
+        "/carrier/shipments/trk-old-1042",
+        "/carrier/shipments/TRKOLD1042",
+        "/orders/ORD-1042",
+        "/carrier/shipments/TRK-NEW-1042",
+        "/carrier/shipments/trk-new-1042",
+        "/carrier/shipments/TRKNEW1042"
+      ],
+      "trace": {
+        "mode": "recover",
+        "scenario": "stale-label",
+        "policy": "scripted-faulty-policy",
+        "status": "escalated",
+        "carrier_calls": 6,
+        "recovery_attempts": 1,
+        "interrupted": true,
+        "resumed": true,
+        "elapsed_ms": 5.24,
+        "answer": "Recovery exhausted; escalate to support.",
+        "events": [
+          {
+            "id": 1,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "TRK-OLD-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 2,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRK-OLD-1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 3,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "trk-old-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 4,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "trk-old-1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 5,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "TRKOLD1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 6,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRKOLD1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 7,
+            "kind": "loop_detected",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "is_stalled": true,
+            "reason": "Repeated shipment lookup failures for the same order without progress",
+            "evidence_ids": [
+              2,
+              4,
+              6
+            ]
+          },
+          {
+            "id": 8,
+            "kind": "recovery_authorized",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "refresh_order"
+          },
+          {
+            "id": 9,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "refresh_order",
+            "args": {
+              "order_id": "ORD-1042"
+            },
+            "result": {
+              "http_status": 200,
+              "order_id": "ORD-1042",
+              "tracking_id": "TRK-NEW-1042"
+            }
+          },
+          {
+            "id": 10,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 1,
+            "action": "track",
+            "tracking_id": "TRK-NEW-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 11,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 1,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRK-NEW-1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 12,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 1,
+            "action": "track",
+            "tracking_id": "trk-new-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 13,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 1,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "trk-new-1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 14,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 1,
+            "action": "track",
+            "tracking_id": "TRKNEW1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 15,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 1,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRKNEW1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 16,
+            "kind": "loop_detected",
+            "order_id": "ORD-1042",
+            "epoch": 1,
+            "is_stalled": true,
+            "reason": "Repeated shipment lookup failures for the same order without progress",
+            "evidence_ids": [
+              11,
+              13,
+              15
+            ]
+          }
+        ],
+        "policy_calls": []
+      }
+    },
+    {
+      "fault": "budget-at-threshold",
+      "budget": 3,
+      "requests": [
+        "/carrier/shipments/TRK-OLD-1042",
+        "/carrier/shipments/trk-old-1042",
+        "/carrier/shipments/TRKOLD1042"
+      ],
+      "trace": {
+        "mode": "recover",
+        "scenario": "stale-label",
+        "policy": "scripted-faulty-policy",
+        "status": "budget_exhausted",
+        "carrier_calls": 3,
+        "recovery_attempts": 0,
+        "interrupted": false,
+        "resumed": false,
+        "elapsed_ms": 2.07,
+        "answer": "Attempt limit reached; escalate.",
+        "events": [
+          {
+            "id": 1,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "TRK-OLD-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 2,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRK-OLD-1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 3,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "trk-old-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 4,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "trk-old-1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 5,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "TRKOLD1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 6,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRKOLD1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          }
+        ],
+        "policy_calls": []
+      }
+    },
+    {
+      "fault": "budget-after-refresh",
+      "budget": 4,
+      "requests": [
+        "/carrier/shipments/TRK-OLD-1042",
+        "/carrier/shipments/trk-old-1042",
+        "/carrier/shipments/TRKOLD1042",
+        "/orders/ORD-1042",
+        "/carrier/shipments/TRK-NEW-1042"
+      ],
+      "trace": {
+        "mode": "recover",
+        "scenario": "stale-label",
+        "policy": "scripted-faulty-policy",
+        "status": "budget_exhausted",
+        "carrier_calls": 4,
+        "recovery_attempts": 1,
+        "interrupted": true,
+        "resumed": true,
+        "elapsed_ms": 3.36,
+        "answer": "Attempt limit reached; escalate.",
+        "events": [
+          {
+            "id": 1,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "TRK-OLD-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 2,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRK-OLD-1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 3,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "trk-old-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 4,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "trk-old-1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 5,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "TRKOLD1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 6,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRKOLD1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 7,
+            "kind": "loop_detected",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "is_stalled": true,
+            "reason": "Repeated shipment lookup failures for the same order without progress",
+            "evidence_ids": [
+              2,
+              4,
+              6
+            ]
+          },
+          {
+            "id": 8,
+            "kind": "recovery_authorized",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "refresh_order"
+          },
+          {
+            "id": 9,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "refresh_order",
+            "args": {
+              "order_id": "ORD-1042"
+            },
+            "result": {
+              "http_status": 200,
+              "order_id": "ORD-1042",
+              "tracking_id": "TRK-NEW-1042"
+            }
+          },
+          {
+            "id": 10,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 1,
+            "action": "track",
+            "tracking_id": "TRK-NEW-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 11,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 1,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRK-NEW-1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          }
+        ],
+        "policy_calls": []
+      }
+    },
+    {
+      "fault": "success-on-final-attempt",
+      "budget": 4,
+      "requests": [
+        "/carrier/shipments/TRK-OLD-1042",
+        "/carrier/shipments/trk-old-1042",
+        "/carrier/shipments/TRKOLD1042",
+        "/orders/ORD-1042",
+        "/carrier/shipments/TRK-NEW-1042"
+      ],
+      "trace": {
+        "mode": "recover",
+        "scenario": "stale-label",
+        "policy": "scripted-faulty-policy",
+        "status": "completed",
+        "carrier_calls": 4,
+        "recovery_attempts": 1,
+        "interrupted": true,
+        "resumed": true,
+        "elapsed_ms": 3.23,
+        "answer": "Your order is in transit. Sorted.",
+        "events": [
+          {
+            "id": 1,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "TRK-OLD-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 2,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRK-OLD-1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 3,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "trk-old-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 4,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "trk-old-1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 5,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "track",
+            "tracking_id": "TRKOLD1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 6,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRKOLD1042"
+            },
+            "result": {
+              "http_status": 404,
+              "error": "shipment_not_found"
+            }
+          },
+          {
+            "id": 7,
+            "kind": "loop_detected",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "is_stalled": true,
+            "reason": "Repeated shipment lookup failures for the same order without progress",
+            "evidence_ids": [
+              2,
+              4,
+              6
+            ]
+          },
+          {
+            "id": 8,
+            "kind": "recovery_authorized",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "action": "refresh_order"
+          },
+          {
+            "id": 9,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 0,
+            "tool": "refresh_order",
+            "args": {
+              "order_id": "ORD-1042"
+            },
+            "result": {
+              "http_status": 200,
+              "order_id": "ORD-1042",
+              "tracking_id": "TRK-NEW-1042"
+            }
+          },
+          {
+            "id": 10,
+            "kind": "policy_decision",
+            "order_id": "ORD-1042",
+            "epoch": 1,
+            "action": "track",
+            "tracking_id": "TRK-NEW-1042",
+            "reason": "Retry the cached reference"
+          },
+          {
+            "id": 11,
+            "kind": "tool_result",
+            "order_id": "ORD-1042",
+            "epoch": 1,
+            "tool": "track_shipment",
+            "args": {
+              "tracking_id": "TRK-NEW-1042"
+            },
+            "result": {
+              "http_status": 200,
+              "status": "in_transit",
+              "latest_event": "Sorted"
+            }
+          }
+        ],
+        "policy_calls": []
+      }
+    }
+  ]
+}

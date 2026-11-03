@@ -126,6 +126,8 @@ def build_agent(
         return updates
 
     def monitor(state):
+        if state["attempts"] >= max_attempts:
+            return {"status": "budget_exhausted", "answer": "Attempt limit reached; escalate."}
         if mode == "baseline":
             return {"decision": {"is_stalled": False, "reason": "detector_disabled"}}
         verdict = detector.evaluate(state["events"], state["order_id"], state["epoch"])
@@ -156,6 +158,8 @@ def build_agent(
         return {"events": [event(state, "recovery_authorized", action="refresh_order")]}
 
     def recover(state):
+        if state["attempts"] >= max_attempts:
+            return {"status": "budget_exhausted", "answer": "Attempt limit reached; escalate."}
         if state["recoveries"] >= 1:
             return {"status": "escalated", "answer": "Recovery exhausted; escalate to support."}
         # Only a read from the trusted order system is allowed; the policy cannot invent an ID.

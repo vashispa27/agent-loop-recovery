@@ -103,15 +103,18 @@ def fixture_services(scenario: str, *, config: FixtureConfig | None = None):
 
 
 class ServiceClient:
-    def __init__(self, base_url: str):
+    def __init__(self, base_url: str, *, transport: httpx.BaseTransport | None = None):
         self.base_url = base_url
+        self.transport = transport
 
     def _get(self, path: str) -> dict:
         try:
             # Ignore proxy environment variables for this local-only demonstration.
-            with httpx.Client(timeout=2, trust_env=False) as client:
+            with httpx.Client(timeout=2, trust_env=False, transport=self.transport) as client:
                 response = client.get(self.base_url + path)
                 return {"http_status": response.status_code, **response.json()}
+        except httpx.TimeoutException:
+            return {"http_status": 503, "error": "service_timeout"}
         except (httpx.HTTPError, ValueError):
             return {"http_status": 503, "error": "service_unavailable"}
 
