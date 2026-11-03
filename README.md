@@ -206,3 +206,7 @@ traces with unchanged fixtures and parameters. Baseline and backoff complete the
 longer delay; immediate refresh and detector recovery escalate prematurely.
 The evaluator now labels premature escalation separately from false detector
 intervention, including harmful actions by policies that never interrupt.
+
+The [threshold and budget sweep](docs/experiment-009.md) measures 216 scripted
+runs. Raising the threshold preserves longer delays but spends more requests on
+irreparable references; leaving enough carrier budget for repair is essential.
