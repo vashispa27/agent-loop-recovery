@@ -178,3 +178,16 @@ integration, monetary-cost measurement, or production reliability claim.
 Inspired by [Tusharaws/agent-circuit-breaker](https://github.com/Tusharaws/agent-circuit-breaker).
 This is an independent implementation focused on recovery and baseline comparison;
 it does not copy the upstream code or reproduce its Redis sidecar architecture.
+
+The [simpler-baseline comparison](docs/experiment-006.md) adds opt-in immediate
+refresh and bounded exponential backoff:
+
+```bash
+uv run python -m agent_loop_recovery.evaluation --split tuning --include-baselines \
+  --output artifacts/simple-baselines.json
+```
+
+Immediate refresh repairs the obsolete label with 2 carrier calls plus 1 order
+read, but escalates prematurely on propagation delay. Backoff preserves delayed
+success and cannot repair a stale reference. The short waits demonstrate retry
+mechanics; the fixtures advance delay by request count rather than wall time.

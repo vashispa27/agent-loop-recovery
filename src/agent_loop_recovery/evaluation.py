@@ -9,6 +9,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from agent_loop_recovery.agent import run_experiment
+from agent_loop_recovery.baselines import BoundedBackoffPolicy, ImmediateRefreshPolicy
 from agent_loop_recovery.services import (
     NEW_TRACKING,
     OLD_TRACKING,
@@ -56,25 +57,42 @@ def manifest() -> list[dict]:
     return [asdict(case) for case in CASES]
 
 
-def evaluate(split: str = "tuning", *, max_attempts: int = 8, threshold: int = 3) -> dict:
+def evaluate(
+    split: str = "tuning",
+    *,
+    max_attempts: int = 8,
+    threshold: int = 3,
+    include_baselines: bool = False,
+) -> dict:
     if split not in ("tuning", "held-out", "all"):
         raise ValueError("Unknown evaluation split")
     if max_attempts < 1 or threshold < 2:
         raise ValueError("Positive attempt budget and threshold >= 2 required")
+    modes = ("baseline", "halt", "recover")
+    if include_baselines:
+        modes += ("immediate-refresh", "bounded-backoff")
     rows = []
     for case in CASES:
         if split != "all" and case.split != split:
             continue
-        for mode in ("baseline", "halt", "recover"):
+        for mode in modes:
+            policy = (
+                ImmediateRefreshPolicy()
+                if mode == "immediate-refresh"
+                else BoundedBackoffPolicy()
+                if mode == "bounded-backoff"
+                else None
+            )
             # Never reuse request counters or graph state between rows.
             with fixture_services("stale-label", config=case.config) as client:
                 trace = run_experiment(
                     client,
-                    mode,
+                    "baseline" if policy else mode,
                     case.id,
                     max_attempts,
                     threshold,
                     initial_tracking=case.initial_tracking,
+                    policy=policy,
                 )
             order_calls = sum(e.get("tool") == "refresh_order" for e in trace["events"])
             rows.append(
@@ -91,11 +109,12 @@ def evaluate(split: str = "tuning", *, max_attempts: int = 8, threshold: int = 3
                     "false_intervention": (
                         trace["interrupted"] and case.recoverable_without_refresh
                     ),
+                    "requested_wait_seconds": getattr(policy, "waits", []),
                     "trace": trace,
                 }
             )
     summaries = {}
-    for mode in ("baseline", "halt", "recover"):
+    for mode in modes:
         group = [row for row in rows if row["mode"] == mode]
         summaries[mode] = {
             "runs": len(group),
@@ -106,7 +125,8 @@ def evaluate(split: str = "tuning", *, max_attempts: int = 8, threshold: int = 3
         }
     return {
         "schema_version": 1,
-        "inference": "none; scripted fault-injection policy",
+        "inference": "none; deterministic policies",
+        "include_baselines": include_baselines,
         "split": split,
         "parameters": {"max_attempts": max_attempts, "threshold": threshold},
         "manifest_sha256": hashlib.sha256(
@@ -123,11 +143,17 @@ def main():
     parser.add_argument("--split", choices=("tuning", "held-out", "all"), default="tuning")
     parser.add_argument("--max-attempts", type=int, default=8)
     parser.add_argument("--threshold", type=int, default=3)
+    parser.add_argument("--include-baselines", action="store_true")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if args.max_attempts < 1 or args.threshold < 2:
         parser.error("max-attempts must be positive; threshold must be >= 2")
-    result = evaluate(args.split, max_attempts=args.max_attempts, threshold=args.threshold)
+    result = evaluate(
+        args.split,
+        max_attempts=args.max_attempts,
+        threshold=args.threshold,
+        include_baselines=args.include_baselines,
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps(result["summary"], indent=2))
