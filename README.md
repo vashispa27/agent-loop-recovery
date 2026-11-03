@@ -200,3 +200,9 @@ issuing an unusable refresh. Reproduce the injected transport checks with:
 ```bash
 uv run python -m agent_loop_recovery.failure_checks --output artifacts/failure-checks.json
 ```
+
+The [held-out five-strategy comparison](docs/experiment-008.md) publishes 20 fresh
+traces with unchanged fixtures and parameters. Baseline and backoff complete the
+longer delay; immediate refresh and detector recovery escalate prematurely.
+The evaluator now labels premature escalation separately from false detector
+intervention, including harmful actions by policies that never interrupt.

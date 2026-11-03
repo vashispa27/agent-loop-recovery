@@ -44,14 +44,24 @@ def test_false_intervention_is_measured_against_fixture_ground_truth():
 
 
 def test_held_out_matrix_exposes_delay_regression_and_bounds_failed_repairs():
-    result = evaluate("held-out")
+    result = evaluate("held-out", include_baselines=True)
     rows = {(r["case_id"], r["mode"]): r for r in result["rows"]}
-    assert len(rows) == 12
+    assert len(rows) == 20
     assert {r["split"] for r in rows.values()} == {"held-out"}
     delay = [rows["four-request-delay", mode] for mode in ("baseline", "halt", "recover")]
     assert [r["status"] for r in delay] == ["completed", "paused", "escalated"]
     assert [r["carrier_calls"] for r in delay] == [5, 3, 3]
     assert [r["false_intervention"] for r in delay] == [False, True, True]
+    immediate = rows["four-request-delay", "immediate-refresh"]
+    backoff = rows["four-request-delay", "bounded-backoff"]
+    assert immediate["premature_escalation"]
+    assert not immediate["false_intervention"]
+    assert (immediate["carrier_calls"], immediate["order_calls"]) == (1, 1)
+    assert backoff["status"] == "completed"
+    assert backoff["carrier_calls"] == 5
+    assert not backoff["premature_escalation"]
+    assert rows["four-request-delay", "recover"]["premature_escalation"]
+    assert not rows["carrier-outage", "immediate-refresh"]["premature_escalation"]
     mismatch = rows["mismatched-order", "recover"]
     assert mismatch["status"] == "escalated"
     assert (mismatch["carrier_calls"], mismatch["order_calls"]) == (3, 1)

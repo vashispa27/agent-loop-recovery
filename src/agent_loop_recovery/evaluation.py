@@ -109,6 +109,11 @@ def evaluate(
                     "false_intervention": (
                         trace["interrupted"] and case.recoverable_without_refresh
                     ),
+                    # Separate from detector interruptions: a policy can abandon a
+                    # viable retry without ever passing through the detector gate.
+                    "premature_escalation": (
+                        trace["status"] == "escalated" and case.recoverable_without_refresh
+                    ),
                     "requested_wait_seconds": getattr(policy, "waits", []),
                     "trace": trace,
                 }
