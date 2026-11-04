@@ -13,7 +13,7 @@ experiment, not evidence that a particular language model naturally makes this m
 Install [uv](https://docs.astral.sh/uv/), then from this directory:
 
 ```bash
-uv sync --python 3.11 --extra dev
+uv sync --locked --python 3.11 --extra dev
 uv run loop-recovery --verbose --output artifacts/stale-label.json
 uv run pytest -q
 ```
@@ -233,3 +233,18 @@ only sanitized traces. See [viewer checks](docs/experiment-010.md) for scope and
 The viewer includes event counts and expand/collapse controls.
 [Browser checks](docs/experiment-011.md) cover demo selection, event expansion,
 offline rendering and a narrow viewport in Chrome.
+
+## Continuous verification
+
+[Checks](https://github.com/vashispa27/agent-loop-recovery/actions/workflows/ci.yml)
+runs on pushes to `main` and pull requests using Python 3.11 and locked dependencies.
+It checks lint, formatting, the full test suite, and the installed demo command.
+A smoke check verifies baseline/halt/recover outcomes and exports both fresh demo
+and published held-out traces to offline HTML:
+
+```bash
+uv run python scripts/verify_demo.py
+```
+
+See [experiment 012](docs/experiment-012.md) for fresh-checkout verification and
+its platform limits. CI uses synthetic HTTP fixtures and does not invoke a model.
