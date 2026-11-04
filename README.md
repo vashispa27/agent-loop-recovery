@@ -210,3 +210,22 @@ intervention, including harmful actions by policies that never interrupt.
 The [threshold and budget sweep](docs/experiment-009.md) measures 216 scripted
 runs. Raising the threshold preserves longer delays but spends more requests on
 irreparable references; leaving enough carrier budget for repair is essential.
+
+## Inspect traces locally
+
+Export an offline HTML viewer from a demo or full evaluation artifact:
+
+```bash
+uv run loop-recovery --output artifacts/viewer-demo.json
+uv run python -m agent_loop_recovery.viewer artifacts/viewer-demo.json \
+  --output artifacts/trace-viewer.html
+# Open artifacts/trace-viewer.html in your browser.
+```
+
+The run selector exposes terminal outcomes, customer answers, evaluation flags,
+and expandable event fields including detector evidence and recovery epochs.
+Policy calls are shown when recorded. No web server or network access is needed.
+You can also pass `docs/results/held-out-baselines.json` as input. Summary-only
+sensitivity artifacts are rejected because they do not contain event traces.
+The exported file embeds the input, including any recorded model prompts; share
+only sanitized traces. See [viewer checks](docs/experiment-010.md) for scope and limits.

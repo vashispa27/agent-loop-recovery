@@ -1,0 +1,18 @@
+{
+  "checks": [
+    {
+      "input": "artifacts/viewer-demo.json",
+      "traces": 3,
+      "events": 34,
+      "model_calls": 0
+    },
+    {
+      "input": "docs/results/held-out-baselines.json",
+      "traces": 20,
+      "events": 175,
+      "model_calls": 0
+    }
+  ],
+  "browser_validation": "not performed",
+  "inference": "none"
+}
