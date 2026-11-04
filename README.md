@@ -229,3 +229,7 @@ You can also pass `docs/results/held-out-baselines.json` as input. Summary-only
 sensitivity artifacts are rejected because they do not contain event traces.
 The exported file embeds the input, including any recorded model prompts; share
 only sanitized traces. See [viewer checks](docs/experiment-010.md) for scope and limits.
+
+The viewer includes event counts and expand/collapse controls.
+[Browser checks](docs/experiment-011.md) cover demo selection, event expansion,
+offline rendering and a narrow viewport in Chrome.

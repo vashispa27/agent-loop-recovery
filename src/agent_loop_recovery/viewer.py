@@ -57,6 +57,9 @@ content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inlin
 body{max-width:1100px;margin:auto;padding:32px 20px}h1{line-height:1.2}
 p{color:#b9c8d6}label{display:block;font-weight:600}select{font:inherit;padding:10px;
 background:#1c2b3a;color:inherit;border:1px solid #7890a5;border-radius:6px;max-width:100%}
+button{font:inherit;padding:8px 12px;margin:0 8px 8px 0;background:#1c2b3a;
+color:inherit;border:1px solid #7890a5;border-radius:6px;cursor:pointer}
+#summary p{white-space:pre-line}
 :focus-visible{outline:3px solid #69d9c6;outline-offset:3px}
 #summary{padding:20px;background:#1c2b3a;margin:24px 0;border-left:4px solid #69d9c6}
 details{border-bottom:1px solid #3b5063;padding:12px 0}
@@ -70,6 +73,9 @@ This file works offline. Traces may include prompts; share only sanitized data.<
 <main><label for="run">Choose a run</label><select id="run"></select>
 <section id="summary" aria-live="polite"></section><h2>Event timeline</h2>
 <p>Expand an event to inspect its complete recorded fields. Epochs separate recovery attempts.</p>
+<p id="event-count" aria-live="polite"></p>
+<button id="expand" type="button" aria-controls="events">Expand all events</button>
+<button id="collapse" type="button" aria-controls="events">Collapse all events</button>
 <div id="events"></div><h2>Policy calls</h2><div id="policy"></div></main>
 <noscript>Enable JavaScript to inspect the embedded traces.</noscript>
 <script id="data" type="application/json">__TRACE_DATA__</script>
@@ -92,6 +98,7 @@ if(t.false_intervention||t.premature_escalation)s.append(node('p',
 `Evaluation flags: false intervention=${!!t.false_intervention};
 premature escalation=${!!t.premature_escalation}`));
 const events=document.getElementById('events');events.replaceChildren();
+document.getElementById('event-count').textContent=`${t.events.length} recorded events`;
 t.events.forEach(e=>detail(events,
 `#${e.id} · ${e.kind} · epoch ${e.epoch??'—'}${e.tool?' · '+e.tool:''}`,e));
 const policy=document.getElementById('policy');policy.replaceChildren();
@@ -99,6 +106,9 @@ const policy=document.getElementById('policy');policy.replaceChildren();
 if(!t.policy_calls?.length)policy.append(node('p',
 'No model calls recorded. Scripted tool counts do not measure token savings.'));
 }
+for(const [id,open] of [['expand',true],['collapse',false]]){
+document.getElementById(id).addEventListener('click',()=>{
+document.querySelectorAll('#events details').forEach(el=>{el.open=open;});});}
 select.addEventListener('change',show);show();
 </script></html>"""
 

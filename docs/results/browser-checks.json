@@ -1,0 +1,32 @@
+{
+  "browser": "Chrome 156 / macOS",
+  "date": "2026-11-04",
+  "source": "file URL; local generated exports",
+  "demo": {
+    "runs": 3,
+    "events": [
+      16,
+      7,
+      11
+    ],
+    "carrier_calls": [
+      8,
+      3,
+      4
+    ],
+    "expand_and_collapse_all": "passed"
+  },
+  "held_out": {
+    "runs": 20,
+    "events": 175,
+    "flagged_runs": 3
+  },
+  "mobile": {
+    "width": 375,
+    "height": 812,
+    "network_emulation": "Offline",
+    "horizontal_overflow": false
+  },
+  "keyboard_expand": "Enter activated focused button; 2 of 2 events opened",
+  "live_inference": false
+}
