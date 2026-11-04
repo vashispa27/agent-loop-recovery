@@ -248,3 +248,12 @@ uv run python scripts/verify_demo.py
 
 See [experiment 012](docs/experiment-012.md) for fresh-checkout verification and
 its platform limits. CI uses synthetic HTTP fixtures and does not invoke a model.
+
+## Generic detector prototype
+
+[Generic trace triage and local MLX checks](docs/experiment-013.md) add bounded
+LangGraph callback capture, basic sanitization, repetition prefiltering and an
+optional semantic judge adapter. Actual cached Qwen3 generations failed the
+structured verdict contract in all six final controls. This prototype is not
+wired to a generic halt guard and does not establish semantic detection or
+architecture parity. The report lists the missing components and raw measurements.
